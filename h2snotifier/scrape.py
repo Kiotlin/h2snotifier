@@ -1,3 +1,4 @@
+import json
 import logging
 
 import requests
@@ -19,12 +20,13 @@ def generate_payload(cities, page_size):
             "currentPage": 1,
             "id": "Nw==",
             "filters": {
-                "available_to_book": {"in": ["179", "336"]},
+                "building_name": { "eq": "6102" },
+                "available_to_book": {"in": ["179"]},
                 "city": {"in": cities},
-                "category_uid": {"eq": "Nw=="},
+                "category_uid": {"eq": "Nw=="}
             },
             "pageSize": page_size,
-            "sort": {"available_startdate": "ASC"},
+            "sort": {"available_startdate": "ASC"}
         },
         "query": """
             query GetCategories($id: String!, $pageSize: Int!, $currentPage: Int!, $filters: ProductAttributeFilterInput!, $sort: ProductAttributeSortInput) {
@@ -158,7 +160,7 @@ def generate_payload(cities, page_size):
               total_count
               __typename
             }
-        """,
+        """
     }
     return payload
 
@@ -270,9 +272,14 @@ Contract type: {house['contract_type']}
 
 
 # Define the GraphQL query payload
-def scrape(cities=[], page_size=30):
+def scrape(cities=[], page_size=10):
     payload = generate_payload(cities, page_size)
-    response = requests.post("https://api.holland2stay.com/graphql/", json=payload)
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+    response = requests.post("https://api.holland2stay.com/graphql/", json=payload, headers=headers)
+    response.raise_for_status();
     data = response.json()["data"]
     cities_dict = {}
     for c in cities:
